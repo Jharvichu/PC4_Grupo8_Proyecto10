@@ -1,5 +1,24 @@
 # PC4_Grupo8_Proyecto10
 
+## Archivo `setup.sh`
+
+**Archivo importante, ejecutar al inicio.**
+
+Este archivo automatiza la creación del setup adecuado para trabajar en este proyecto. Realiza las siguientes operaciones:
+
+- Crea el entorno virtual `venv`. (si es que aún no está creado)
+- Activa dicho entorno.
+- Instalar las dependencias dentro de `requirements.txt` (si es que existe).
+- Mueve los hooks de `hooks/` (`pre-commit`, `commit-msg` y `pre-push`) al directorio `.git/hooks/` y les de permisos de ejecución.
+
+Dicho script bash se puede ejecutar de la siguiente manera
+
+```
+source setup.sh
+```
+
+Cabe mencionar que algunos comandos dentro de `setup.sh` (como `source venv/bin/activate`) solamente funcionan en sistemas tipo Unix, por lo cual, si se usa otro sistema operativo simplemente dichos comandos no tendrán efecto.
+
 ## Hooks
 
 ### pre-commit
