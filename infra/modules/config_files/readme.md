@@ -1,6 +1,5 @@
-# Módulo <config_files>
+# Módulo config_files
 
 ### Descripción
-
-<Genera archivos de configuración (main.conf, app.conf) dentro del directorio raíz.
-Requiere que root_dir haya creado correctamente su estructura.>
+Genera archivos de configuración (main.conf, app.conf) dentro del directorio raíz y además
+requiere que root_dir haya creado correctamente su estructura.
