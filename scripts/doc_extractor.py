@@ -1,6 +1,7 @@
 import os
 import re
 
+
 def parse_main_tf(modulo_path):
     """
     Lee main.tf y extrae recursos (tipo, nombre, filename, command).
@@ -17,7 +18,7 @@ def parse_main_tf(modulo_path):
         resources = []
         pattern = r'resource\s+"(?P<type>[^"]+)"\s+"(?P<name>[^"]+)"\s*{(?P<body>.*?)\n}'
         matches = re.finditer(pattern, content, re.DOTALL)
-        
+
         for match in matches:
             resource_type = match.group("type")
             resource_name = match.group("name")
@@ -36,7 +37,7 @@ def parse_main_tf(modulo_path):
                     "filename": filename,
                     "content": content_description
                 })
-                
+
             elif (resource_type == "null_resource"):
                 cmd_match = re.search(r'command\s*=\s*"(.*?)"\s*$', body, re.MULTILINE)
                 command = cmd_match.group(1).strip() if cmd_match else "<null>"
@@ -45,17 +46,18 @@ def parse_main_tf(modulo_path):
                 output_file = output_file.group(1) if output_file else "<null>"
 
                 resources.append({
-                    "type":        resource_type,
-                    "name":        resource_name,
-                    "command":     command,
+                    "type": resource_type,
+                    "name": resource_name,
+                    "command": command,
                     "output_file": output_file
                 })
 
         return resources
-    
+
     except Exception as e:
         print(f"Error leyendo {main_tf_path}: {e}")
         return []
+
 
 def parse_variables_tf(modulo_path):
     """
@@ -88,16 +90,17 @@ def parse_variables_tf(modulo_path):
 
             resources.append({
                 "name": variable_name,
-                "descripcion":description,
+                "descripcion": description,
                 "type": type,
                 "default": default
             })
 
         return resources
-    
+
     except Exception as e:
         print(f"Error leyendo {variables_tf_path}: {e}")
         return []
+
 
 def parse_outputs_tf(modulo_path):
     """
@@ -107,7 +110,7 @@ def parse_outputs_tf(modulo_path):
 
     if not os.path.exists(outputs_tf_path):
         return []
-    
+
     try:
         with open(outputs_tf_path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -115,7 +118,7 @@ def parse_outputs_tf(modulo_path):
         resources = []
         pattern = r'output\s+"(?P<name>[^"]+)"\s*{(?P<body>.*?)\n}'
         matches = re.finditer(pattern, content, re.DOTALL)
-        
+
         for match in matches:
             variable_name = match.group("name")
             body = match.group("body")
@@ -128,15 +131,16 @@ def parse_outputs_tf(modulo_path):
 
             resources.append({
                 "name": variable_name,
-                "descripcion":description,
+                "descripcion": description,
                 "value": value,
             })
 
         return resources
-    
+
     except Exception as e:
         print(f"Error leyendo {outputs_tf_path}: {e}")
         return []
+
 
 def parse_readme_md(modulo_path):
     """
@@ -150,10 +154,13 @@ def parse_readme_md(modulo_path):
     with open(readme_path, encoding="utf-8") as f:
         content = f.read()
 
-    descripcion_match = re.search(r'## Descripción\s+(.*?)(?=\n##|\Z)', content, re.DOTALL)
+    module_match = re.search(r'^[ \t]*#[ \t]*M[óo]dulo[ \t]+(.+)$', content, re.MULTILINE | re.IGNORECASE)
+    descripcion_match = re.search(r'### Descripción\s+(.*?)(?=\n###|\Z)', content, re.DOTALL)
 
     descripcion = descripcion_match.group(1).strip() if descripcion_match else "<null>"
+    module = module_match.group(1) if module_match else "<null>"
 
     return {
-        "descripcion": descripcion,
+        "modulo": module,
+        "descripcion": descripcion
     }
