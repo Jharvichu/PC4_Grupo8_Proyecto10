@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 
 def parse_main_tf(modulo_path):
@@ -73,7 +74,7 @@ def parse_variables_tf(modulo_path):
             content = f.read()
 
         resources = []
-        pattern = r'variable\s+"(?P<name>[^"]+)"\s*{(?P<body>)\n}'
+        pattern = r'variable\s+"(?P<name>[^"]+)"\s*{\s*(?P<body>[^}]+)}'
         matches = re.finditer(pattern, content, re.DOTALL)
 
         for match in matches:
@@ -81,12 +82,12 @@ def parse_variables_tf(modulo_path):
             body = match.group("body")
 
             description_match = re.search(r'description\s*=\s*["\'](.+?)["\']', body)
-            type_match = re.search(r'type\s*=\s*(?:"|\')?([^"\']+)(?:"|\')?', body)
+            type_match = re.search(r'type\s*=\s*(?:"|\')?([^\n"\']+)(?:"|\')?', body)
             default_match = re.search(r'default\s*=\s*(?:"|\')?([^"\']+)(?:"|\')?', body)
 
             description = description_match.group(1) if description_match else "<null>"
             type = type_match.group(1) if type_match else "<null>"
-            default = default_match.group(1) if default_match else "<null>"
+            default = default_match.group(1).strip() if default_match else "<null>"
 
             resources.append({
                 "name": variable_name,
@@ -164,3 +165,85 @@ def parse_readme_md(modulo_path):
         "modulo": module,
         "descripcion": descripcion
     }
+
+
+def build_content(modulo_path):
+    """
+    Genera el contenido Markdown de un modulo.
+    """
+    readme = parse_readme_md(modulo_path)
+    main_resources = parse_main_tf(modulo_path)
+    variables = parse_variables_tf(modulo_path)
+    outputs = parse_outputs_tf(modulo_path)
+
+    md = []
+    titulo = readme.get("modulo", "<sin módulo>").strip()
+    descripcion = readme.get("descripcion", "<sin descripción>").strip()
+
+    md.append(f"# Módulo {titulo}\n")
+    md.append(f"{descripcion}\n")
+    md.append("\n")
+
+    if variables:
+        md.append("### Tabla de variables:\n")
+        md.append("| Nombre | Tipo | Descripcion | Default |\n")
+        md.append("|--------|------|-------------|---------|\n")
+        for var in variables:
+            default = var.get("default", "") if var.get("default") is not None else ""
+            md.append(f"| {var.get('name', '')} | {var.get('type', '')} | {var.get('descripcion', '')} | {default} |\n")
+        md.append("\n")
+
+    if outputs:
+        md.append("### Tabla de outputs:\n")
+        md.append("| Nombre | Descripción | Valor |\n")
+        md.append("|--------|-------------|-------|\n")
+        for out in outputs:
+            md.append(f"| {out.get('name', '')} | {out.get('descripcion', '')} | {out.get('value', '')} |\n")
+        md.append("\n")
+
+    if main_resources:
+        md.append("### Lista de recursos:\n")
+        for res in main_resources:
+            if res["type"] == "local_file":
+                md.append(
+                    f'- Recurso de tipo `{res["type"]}` con nombre **{res["name"]}** crea el archivo `{res["filename"]}` con contenido `{res["content"]}`\n'
+                )
+            elif res["type"] == "null_resource":
+                md.append(
+                    f'- Recurso de tipo `{res["type"]}` con nombre **{res["name"]}** ejecuta el comando `{res["command"]}` en `{res["output_file"]}`\n'
+                )
+            else:
+                md.append(f'- Recurso de tipo `{res["type"]}` con nombre **{res["name"]}**\n')
+        md.append("\n")
+
+    return "".join(md)
+
+
+def write_md():
+    """
+    Escribe el contenido dado en un archivo README.md en la ruta especificada.
+    """
+    root = os.path.join(os.path.dirname(__file__), "../infra/modules")
+    docs_path = os.path.join(os.path.dirname(__file__), "../docs")
+
+    if not os.path.isdir(root):
+        print(f"ERROR: No se encontro el directorio '{root}' ")
+        sys.exit(1)
+
+    if not os.path.isdir(docs_path):
+        print("Creando directorio docs")
+        try:
+            os.mkdir(docs_path)
+        except PermissionError:
+            print("Permisos denegados")
+
+    modules_list = os.listdir(root)
+
+    for module in modules_list:
+        content = build_content(f'{root}/{module}')
+        with open(f'{docs_path}/{module}.md', 'w') as doc:
+            doc.write(content)
+
+
+if __name__ == "__main__":
+    write_md()
