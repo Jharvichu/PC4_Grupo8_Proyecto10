@@ -160,5 +160,101 @@ output "root_path" {
         assert parse_outputs_tf(directorio_temporal) == []
 
 
+class TestParseReadmeMd:
+    """Tests para función parse_readme_md"""
+
+    def test_readme_complete(self, directorio_temporal):
+        """Probar parsing de README completo"""
+        contenido = '''# Módulo config_files\n### Descripción\nEste módulo crea archivos de configuración principales.'''
+        crear_archivo_tf(directorio_temporal, "README.md", contenido)
+        resultado = parse_readme_md(directorio_temporal)
+        assert resultado["modulo"] == "config_files"
+        assert "Este módulo crea archivos" in resultado["descripcion"]
+
+    def test_readme_no_file(self, directorio_temporal):
+        """Probar cuando no hay README.md"""
+        resultado = parse_readme_md(directorio_temporal)
+        assert resultado == {}
+
+    def test_readme_missing_sections(self, directorio_temporal):
+        """Probar README con estructura faltante"""
+        contenido = "# Algun contenido\nSin estructura."
+        crear_archivo_tf(directorio_temporal, "README.md", contenido)
+        resultado = parse_readme_md(directorio_temporal)
+        assert resultado["modulo"] == "<null>"
+        assert resultado["descripcion"] == "<null>"
+
+
+class TestBuildContent:
+    """Tests para función build_content"""
+
+    def test_complete_module(self, directorio_temporal):
+        """Probar generación de contenido para un módulo"""
+        crear_modulo_prueba(directorio_temporal)
+        resultado = build_content(directorio_temporal)
+        assert "# Módulo test_module" in resultado
+        assert "### Tabla de variables:" in resultado
+        assert "### Lista de recursos:" in resultado
+
+    def test_empty_module(self, directorio_temporal):
+        """Probar generación para módulo vacío"""
+        resultado = build_content(directorio_temporal)
+        assert "# Módulo <sin módulo>" in resultado
+        assert "<sin descripción>" in resultado
+
+
+class TestWriteMd:
+    """Tests para función write_md"""
+
+    @patch('scripts.doc_extractor.os.path.dirname')
+    @patch('scripts.doc_extractor.os.path.isdir')
+    @patch('scripts.doc_extractor.os.listdir')
+    @patch('scripts.doc_extractor.os.mkdir')
+    @patch('builtins.open', new_callable=mock_open)
+    def test_write_md_success(self, mock_file, mock_mkdir, mock_listdir, mock_isdir, mock_dirname):
+        """Probar escritura exitosa"""
+        mock_dirname.return_value = "/falsos/scripts"
+        mock_isdir.side_effect = [True, False]  # modules en true, docs en false
+        mock_listdir.return_value = ["config_files", "root_dir"]
+        write_md()
+        mock_mkdir.assert_called_once()
+        assert mock_file.call_count >= 2
+
+    @patch('scripts.doc_extractor.os.path.dirname')
+    @patch('scripts.doc_extractor.os.path.isdir')
+    @patch('scripts.doc_extractor.sys.exit')
+    def test_write_md_no_modules_dir(self, mock_exit, mock_isdir, mock_dirname):
+        """Probar cuando no haya directorio modules"""
+        mock_dirname.return_value = "/falsos/scripts"
+        mock_isdir.return_value = False
+        mock_exit.side_effect = SystemExit(1)
+        with pytest.raises(SystemExit):
+            write_md()
+
+
+class TestErrorHandling:
+    """Tests de manejo de errores"""
+
+    def test_permission_error(self, directorio_temporal):
+        """Probar manejo de errores en permisos"""
+        ruta_archivo = crear_archivo_tf(directorio_temporal, "main.tf", "test content")
+        os.chmod(ruta_archivo, 0o000)
+        try:
+            resultado = parse_main_tf(directorio_temporal)
+            assert resultado == []
+        finally:
+            os.chmod(ruta_archivo, 0o644)
+
+    def test_malformed_content(self, directorio_temporal):
+        """Probar estructura malformada"""
+        contenido = '''
+        variable "roto" {
+          description = "Falta comillas dobles
+          type = string'''
+        crear_archivo_tf(directorio_temporal, "variables.tf", contenido)
+        resultado = parse_variables_tf(directorio_temporal)
+        assert isinstance(resultado, list)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
