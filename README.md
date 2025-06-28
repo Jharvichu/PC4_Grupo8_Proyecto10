@@ -61,80 +61,38 @@ Cabe mencionar que algunos comandos dentro de `setup.sh` (como `source venv/bin/
   pytest
   ```
 
-## carpeta Modules
-### root_dir/
-Función:
-Crea un directorio raíz en el sistema de archivos local. Este directorio actúa como la base de la infraestructura sobre la cual se construyen los demás componentes.
+## Infraestructura Basica
 
-### config_files/
-Función:
-Genera archivos de configuración (main.conf, app.conf) dentro del directorio raíz.
-Dependencia: Requiere que root_dir haya creado correctamente su estructura.
+Instrucciones de ejecución de la infraestructura en la termina
 
-### service_dir/
-Función:
-Crea un subdirectorio (secondary_service/) dentro del directorio raíz y un archivo representativo de un servicio secundario (service_data.txt).
-Dependencia: Depende tanto de root_dir como de los archivos generados en `config_files`.
-
-### summary_creator/
-Función:
-Ejecuta un script mediante null_resource y local-exec que genera un archivo `summary.txt` dentro del directorio raíz. Este archivo resume las rutas de los archivos y directorios creados por los módulos anteriores.
-Dependencia: Depende explícitamente de todos los módulos previos.
-
-### Archivos importantes en la raíz
-main.tf
-Este archivo orquesta la integración de los módulos, pasando variables y conectando las salidas entre sí, garantizando que las dependencias estén explícitamente modeladas.
-
-### Instrucciones de Ejecución
-
-```
-Desde la raiz:
-
+``` bash
+# Ejecución de infraestructura
 terraform init
-
-terraform apply
+terraform apply -auto-approve
 ```
 
-### Resultado Esperado
-Al ejecutar correctamente terraform apply, se debe crear una estructura como esta:
+### **Modulos**
+
+| Modulos | Funcion | Dependencia |
+|---------|---------|-------------|
+|root_dir/| Crea un directorio raíz en el sistema de archivos local. Este directorio actúa como la base de la infraestructura sobre la cual se construyen los demás componentes.||
+|config_files/|Genera archivos de configuración (main.conf, app.conf) dentro del directorio raíz.| Requiere que root_dir haya creado correctamente su estructura.
+|service_dir|Crea un subdirectorio (secondary_service/) dentro del directorio raíz y un archivo representativo de un servicio secundario (service_data.txt).|Depende tanto de root_dir como de los archivos generados en `config_files`.|
+|summary_creator|Ejecuta un script mediante null_resource y local-exec que genera un archivo `summary.txt` dentro del directorio raíz. Este archivo resume las rutas de los archivos y directorios creados por los módulos anteriores.|Depende explícitamente de todos los módulos previos.|
 
 
-### Estructura generada por Terraform
-#### infra_local/
-Este es el directorio raíz de la infraestructura local. Fue creado por el módulo root_dir. Todo lo demás se construye dentro de él.
+## Extractor y generación automatica de documentación
 
-#### main.conf y app.conf
-Estos son archivos de configuración básicos.
-Fueron generados por el módulo config_files dentro del directorio raíz infra_local/. Simulan archivos que una aplicación o servicio podría necesitar para funcionar.
+El script `doc_extractor` automatiza la generación de documentación Markdown para módulos de Terraform. Extrae información de los archivos `main.tf`, `variables.tf`, `outputs.tf` y `README.md`, y genera un archivo .md por cada módulo ubicado en la carpeta `infra/modules`. Los resultados se guardan en el directorio `docs/`.
 
-#### secondary_service/
- Ubicación: infra_local/secondary_service/
-
-Este es un subdirectorio que representa un servicio secundario dentro de la infraestructura. Fue creado por el módulo service_dir.
-
-#### service_data.txt
-Este archivo está dentro del subdirectorio secondary_service/.
-Contiene información ficticia o simulada, como si fuera la configuración o datos de ese servicio.
-
-#### summary.txt
-Este archivo fue generado por el módulo summary_creator, usando un script que corre localmente con `null_resource` y `local-exec`.
-Contiene un resumen de todos los recursos creados por los otros módulos: rutas, nombres de archivo, etc. Sirve como una forma de validar que todo fue creado y que las dependencias se resolvieron correctamente.
-
-El archivo summary.txt contendrá información sobre los directorios y archivos creados por cada módulo, verificando que las dependencias funcionaron correctamente.
+Para generar automaticamente la documentación de los modulos de la infraestructura debemos ejecutar los siguientes comando
 
 
 #### diagram_generator.py
 
 ## Responsabilidad de `generate_dependencies()`:
 
-- Busca todos los subdirectorios en `infra/modules/`.
-- Lee los archivos `main.tf` dentro de cada módulo.
-- Extrae dependencias como:
-- Módulos usados (`module "..."`)
-- Recursos referenciados con `depends_on = [...]`
-- Variables (`var.algo`)
-- Recursos `data` (`data.tipo.nombre`)
-- Fuentes de otros módulos (`source = "../modulo"`)
+Busca todos los subdirectorios en `infra/modules/`,Lee los archivos `main.tf` dentro de cada módulo, Extrae dependencias como módulos usados (`module "..."`), recursos referenciados con `depends_on = [...]`, Variables (`var.algo`), Recursos `data` (`data.tipo.nombre`), fuentes de otros módulos (`source = "../modulo"`)
 
 ## Ejecucion:
 
@@ -147,4 +105,11 @@ python3 diagram_generator.py
 
 ## Resultados:
 Un archivo con un grafo en lenguaje DOT que describe las dependencias entre nodos; representa como los módulos y variables estan relacionados y tienen dependencias entre si. Se puede usar para generar diagramas .png con `Graphivz`.
+
+
+```bash
+# Desde la raiz del proyecto
+cd scripts/
+python3 doc_generator.py
+```
 
