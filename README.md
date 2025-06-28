@@ -123,3 +123,28 @@ Contiene un resumen de todos los recursos creados por los otros módulos: rutas,
 El archivo summary.txt contendrá información sobre los directorios y archivos creados por cada módulo, verificando que las dependencias funcionaron correctamente.
 
 
+#### diagram_generator.py
+
+## Responsabilidad de `generate_dependencies()`:
+
+- Busca todos los subdirectorios en `infra/modules/`.
+- Lee los archivos `main.tf` dentro de cada módulo.
+- Extrae dependencias como:
+- Módulos usados (`module "..."`)
+- Recursos referenciados con `depends_on = [...]`
+- Variables (`var.algo`)
+- Recursos `data` (`data.tipo.nombre`)
+- Fuentes de otros módulos (`source = "../modulo"`)
+
+## Ejecucion:
+
+Dentro de scripts/
+
+```
+python3 diagram_generator.py
+```
+
+
+## Resultados:
+Un archivo con un grafo en lenguaje DOT que describe las dependencias entre nodos; representa como los módulos y variables estan relacionados y tienen dependencias entre si. Se puede usar para generar diagramas .png con `Graphivz`.
+
