@@ -90,9 +90,9 @@ Para generar automaticamente la documentación de los modulos de la infraestruct
 
 #### diagram_generator.py
 
-## Responsabilidad de `generate_dependencies()`:
+## Responsabilidad de `generate_diagram_dot`:
 
-Busca todos los subdirectorios en `infra/modules/`,Lee los archivos `main.tf` dentro de cada módulo, Extrae dependencias como módulos usados (`module "..."`), recursos referenciados con `depends_on = [...]`, Variables (`var.algo`), Recursos `data` (`data.tipo.nombre`), fuentes de otros módulos (`source = "../modulo"`)
+Crea un archivo .dot (formato de Graphviz) con las dependencias detectadas, entre los 4 módulos creados anteriormente, después lo convierte en una imagen PNG.
 
 ## Ejecucion:
 
@@ -104,7 +104,7 @@ python3 diagram_generator.py
 
 
 ## Resultados:
-Un archivo con un grafo en lenguaje DOT que describe las dependencias entre nodos; representa como los módulos y variables estan relacionados y tienen dependencias entre si. Se puede usar para generar diagramas .png con `Graphivz`.
+Un archivo con un grafo en lenguaje DOT que describe las dependencias entre nodos; representa como los módulos y variables estan relacionados y tienen dependencias entre si. Se puede usar para generar diagramas .png con `Graphivz`.También se espera una imagen PNG que contiene los módulos y su relacion de dependencias.
 
 
 ```bash
