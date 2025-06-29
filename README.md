@@ -112,4 +112,22 @@ Un archivo con un grafo en lenguaje DOT que describe las dependencias entre nodo
 cd scripts/
 python3 doc_generator.py
 ```
+### script generate_docs.py
+Va a recorrer todos los módulos Terraform en infra/modules/, extraer metadatos importantes de cada módulo(nombre, variables, outputs), genera documentación Markdown en cada módulo,
+analiza dependencias entre los módulos y recursos, genera un grafo de dependencias en un formato .dot y una imagen .png usando Graphviz.
 
+## Resultados:
+Archivos markdown creados en la carpeta docs con información resumida de cada módulo.
+Una  `dependencies.dot` y un `dependencies.png`con las dependencias de módulos visualizadas en un grafo.
+
+## Herramientas
+
+Graphviz y Python3.8+
+
+
+## Ejecución
+Dentro de scripts:
+
+```
+python3 generator_docs.py
+```
