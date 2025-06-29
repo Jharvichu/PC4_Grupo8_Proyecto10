@@ -27,8 +27,6 @@ def parce_dependencies(module) -> list:
         r'data\.([a-zA-Z0-9_-]+)',         # Coincide con datos externos (data.tipo)
         r'source\s*=\s*"../([a-zA-Z0-9_-]+)"',  # Coincide con módulos locales "../modulo"
     ]
-
-    # Acá se recorre los archivos dentro del módulo
     for archivo in os.listdir(module):
         if archivo.endswith("main.tf"):
             with open(os.path.join(module, archivo), 'r') as f:
@@ -43,7 +41,7 @@ def parce_dependencies(module) -> list:
                 coincidencias_remote = re.findall(patrones[-1], contenido, re.DOTALL)
                 for coincidencia in coincidencias_remote:
                     # coincidencia es una cadena, no una tupla, por eso se usa directamente
-                    dependencias.append(coincidencia)
+                    dependencias.append(coincidencia[1])
 
     return dependencias
 
@@ -91,4 +89,4 @@ def generate_diagram_dot():
 # Entrada principal del script
 if __name__ == "__main__":
     generate_diagram_dot()  # Ejecuta esta función para que genere archivo dot y su imagen.
-
+    
