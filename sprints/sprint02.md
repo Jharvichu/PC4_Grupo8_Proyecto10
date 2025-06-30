@@ -1,3 +1,6 @@
+[Video del Sprint 02](https://unipe-my.sharepoint.com/:f:/g/personal/luis_alanya_c_uni_pe/EhtGzayR_yxImugh8lIdsyEBnHnMLsvhf50CpsYyiFJBcg?e=xpwUTF)
+
+
 ## Archivo `test_diagram_generator.py`
 
 Tests para el generador de diagramas de dependencias de módulos Terraform.
@@ -77,3 +80,34 @@ Tests para el extractor de documentación de módulos Terraform que genera archi
 - Tests parametrizados para múltiples escenarios.
 - Mocks para operaciones de sistema de archivos.
 - Manejo de excepciones y casos límite.
+
+## Archivo `diagram_generator.py`
+
+Script para analizar los módulos Terraform dentro de `infra/modules`, detectar dependencias entre ellos y generar un diagrama visual en formato DOT y PNG usando Graphviz.
+
+---
+
+### Funciones principales
+
+- **`generate_dependencies()`**  
+  Recorre los módulos, analiza sus archivos `main.tf` y construye un diccionario con sus dependencias.
+
+- **`parce_dependencies(module)`**  
+  Extrae, usando expresiones regulares, referencias a submódulos, dependencias, variables, datos y fuentes locales de los archivos `main.tf`.
+
+- **`generate_diagram_dot()`**  
+  Toma las dependencias encontradas, genera el archivo `docs/dependencies.dot` y lo convierte a imagen PNG con `dot` (Graphviz).
+
+---
+
+### Uso
+
+Ejecutar el script crea (o actualiza) en el directorio `docs` el grafo `.dot` y su imagen `.png` que visualiza las relaciones entre los módulos.
+
+**Requiere:**  
+- Python  
+- Graphviz instalado y accesible vía línea de comandos.
+
+```bash
+python3 scripts/diagram_generator.py
+```
