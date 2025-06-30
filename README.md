@@ -88,13 +88,13 @@ El script `doc_extractor` automatiza la generación de documentación Markdown p
 Para generar automaticamente la documentación de los modulos de la infraestructura debemos ejecutar los siguientes comando
 
 
-#### diagram_generator.py
+## `diagram_generator.py`
 
-## Responsabilidad de `generate_diagram_dot`:
+### Responsabilidad de `generate_diagram_dot`:
 
 Crea un archivo .dot (formato de Graphviz) con las dependencias detectadas, entre los 4 módulos creados anteriormente, después lo convierte en una imagen PNG.
 
-## Ejecucion:
+### Ejecucion:
 
 Dentro de scripts/
 
@@ -103,7 +103,7 @@ python3 diagram_generator.py
 ```
 
 
-## Resultados:
+### Resultados:
 Un archivo con un grafo en lenguaje DOT que describe las dependencias entre nodos; representa como los módulos y variables estan relacionados y tienen dependencias entre si. Se puede usar para generar diagramas .png con `Graphivz`.También se espera una imagen PNG que contiene los módulos y su relacion de dependencias.
 
 

@@ -1,3 +1,5 @@
+[Video del Sprint 03](https://unipe-my.sharepoint.com/:f:/g/personal/luis_alanya_c_uni_pe/EhtGzayR_yxImugh8lIdsyEBnHnMLsvhf50CpsYyiFJBcg?e=xpwUTF)
+
 ## Archivo `test_terraform_docs_validation.py`
 
 Tests para validar la relación entre archivos Terraform y su documentación en formato Markdown que se genera.
