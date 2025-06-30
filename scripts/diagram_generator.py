@@ -1,6 +1,7 @@
-import os # permite interactuar con el sistema operativo donde se utiliza Python
-import re # proporciona operaciones con regex
-import subprocess #libreria que permite ejecutar comandos externos del sistema operativo
+import os  # permite interactuar con el sistema operativo donde se utiliza Python
+import re  # proporciona operaciones con regex
+import subprocess  # libreria que permite ejecutar comandos externos del sistema operativo
+
 
 # Esta función principal recorre todos los módulos Terraform ubicados en  infra/modules
 # y genera un diccionario con las dependencias encontradas en los archivos main.tf
@@ -14,6 +15,7 @@ def generate_dependencies():
         dependencies[f'{module}'] = content  # Almacena en el diccionario
 
     return dependencies
+
 
 # Esta función analiza un módulo Terraform hasta encontrar todas sus dependencias
 def parce_dependencies(module) -> list:
@@ -44,6 +46,7 @@ def parce_dependencies(module) -> list:
                     dependencias.append(coincidencia[1])
 
     return dependencias
+
 
 # Crea un archivo .dot (formato de Graphviz) con las dependencias detectadas
 # y lo convierte en una imagen PNG
@@ -86,7 +89,7 @@ def generate_diagram_dot():
     except FileNotFoundError:
         print("Error: Graphviz no está instalado o 'dot' no está en el PATH.")
 
+
 # Entrada principal del script
 if __name__ == "__main__":
     generate_diagram_dot()  # Ejecuta esta función para que genere archivo dot y su imagen.
-    
