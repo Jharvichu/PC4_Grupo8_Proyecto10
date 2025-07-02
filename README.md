@@ -144,11 +144,8 @@ python3 generator_docs.py
 - Lista de **recursos** definidos en `main.tf`.
  
 ## ¿Para qué sirve?
-
-
 ### **Auditoria rapida**
 Permite identificar de un vistazo qué tanto has documentado tus variables y outputs, evitando que queden elementos sin explicar en tu infraestructura.
-
 
 ### **Medición objetiva**
 Al mostrar los porcentajes de cobertura, puedes establecer umbrales mínimos (por ejemplo, 80 %) y enseguida ver si tu módulo los alcanza.
