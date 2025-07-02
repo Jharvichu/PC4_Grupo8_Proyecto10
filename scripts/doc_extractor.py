@@ -25,7 +25,7 @@ def parse_main_tf(modulo_path):
             resource_name = match.group("name")
             body = match.group("body")
 
-            if (resource_type == "local_file"):
+            if resource_type == "local_file":
                 filename_match = re.search(r'filename\s*=\s*["\'](.+?)["\']', body, re.DOTALL)
                 content_match = re.search(r'content\s*=\s*["\'](.+?)["\']', body, re.DOTALL)
 
@@ -39,7 +39,7 @@ def parse_main_tf(modulo_path):
                     "content": content_description
                 })
 
-            elif (resource_type == "null_resource"):
+            elif resource_type == "null_resource":
                 cmd_match = re.search(r'command\s*=\s*"(.*?)"\s*$', body, re.MULTILINE)
                 command = cmd_match.group(1).strip() if cmd_match else "<null>"
 
@@ -167,14 +167,38 @@ def parse_readme_md(modulo_path):
     }
 
 
+# Esta función analiza cada módulo y mira qué tan bien documentado está
+def cobertura_documentacion(modulo_path):
+    variables = parse_variables_tf(modulo_path)  # Extrae variables de cada módulo Terraform
+    outputs = parse_outputs_tf(modulo_path)      # Extrae outputs de cada módulo Terraform
+    readme = parse_readme_md(modulo_path)        # Extrae contenido de README.md del módulo
+
+    total_vars = len(variables)  # Número de variables halladas
+    doc_vars = sum(1 for v in variables if v.get("descripcion") and v.get("descripcion") != "<null>")  # Variables documentadas
+    total_outputs = len(outputs)  # Número de outputs hallados
+    doc_outputs = sum(1 for o in outputs if o.get("descripcion") and o.get("descripcion") != "<null>")  # Outputs documentados
+
+    tiene_readme = True if readme and readme.get("descripcion") and readme.get("descripcion") != "<null>" else False
+    # Retorna las métricas de cobertura
+
+    return {
+        "total_vars": total_vars,
+        "doc_vars": doc_vars,
+        "total_outputs": total_outputs,
+        "doc_outputs": doc_outputs,
+        "tiene_readme": tiene_readme
+    }
+
+
 def build_content(modulo_path):
     """
-    Genera el contenido Markdown de un modulo.
+    Genera el contenido Markdown de un módulo, incluyendo métricas de cobertura de documentación.
     """
     readme = parse_readme_md(modulo_path)
     main_resources = parse_main_tf(modulo_path)
     variables = parse_variables_tf(modulo_path)
     outputs = parse_outputs_tf(modulo_path)
+    cobertura = cobertura_documentacion(modulo_path)
 
     md = []
     titulo = readme.get("modulo", "<sin módulo>").strip()
@@ -184,9 +208,16 @@ def build_content(modulo_path):
     md.append(f"{descripcion}\n")
     md.append("\n")
 
+    # Sección de cobertura para la documentacion
+    md.append("## Cobertura de documentación\n")
+    var_cov = (cobertura["doc_vars"] / cobertura["total_vars"] * 100) if cobertura["total_vars"] else 100
+    out_cov = (cobertura["doc_outputs"] / cobertura["total_outputs"] * 100) if cobertura["total_outputs"] else 100
+    md.append(f"- Variables documentadas: {cobertura['doc_vars']} de {cobertura['total_vars']} ({var_cov:.0f}%)\n")
+    md.append(f"- Outputs documentados: {cobertura['doc_outputs']} de {cobertura['total_outputs']} ({out_cov:.0f}%)\n")
+    md.append(f"- ¿README con descripción? {'Sí' if cobertura['tiene_readme'] else 'No'}\n\n")
+    
     if variables:
         md.append("### Tabla de variables:\n")
-        md.append("| Nombre | Tipo | Descripcion | Default |\n")
         md.append("|--------|------|-------------|---------|\n")
         for var in variables:
             default = var.get("default", "") if var.get("default") is not None else ""
@@ -227,7 +258,6 @@ def write_md():
     docs_path = os.path.join(os.path.dirname(__file__), "../docs")
 
     if not os.path.isdir(root):
-        print(f"ERROR: No se encontro el directorio '{root}' ")
         sys.exit(1)
 
     if not os.path.isdir(docs_path):
