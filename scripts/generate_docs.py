@@ -3,8 +3,8 @@ import re          # Para expresiones regulares(regex)
 import subprocess  # Para que llame a 'dot' de Graphviz y generar PNG de grafo
 import argparse
 
-ROOT_DIR = os.path.join(os.path.dirname(__file__), "../infra/modules") #ruta de modulos de Terraform
-DOCS_DIR = os.path.join(os.path.dirname(__file__), "../docs")  # ruta donde se generaran los markdown y diagramas 
+ROOT_DIR = os.path.join(os.path.dirname(__file__), "../infra/modules")  # ruta de modulos de Terraform
+DOCS_DIR = os.path.join(os.path.dirname(__file__), "../docs")  # ruta donde se generaran los markdown y diagramas
 
 
 # Extraccion de metadatos #
@@ -24,11 +24,9 @@ def parse_readme_md(module_path):
         content = f.read()
 
     # Buscara linea en el encabezado "# Módulo <nombre>"
-    module_match = re.search(r'^[ \t]*#[ \t]*M[óo]dulo[ \t]+(.+)$',
-                            content, re.MULTILINE | re.IGNORECASE)
+    module_match = re.search(r'^[ \t]*#[ \t]*M[óo]dulo[ \t]+(.+)$', content, re.MULTILINE | re.IGNORECASE)
     # Buscar sección bajo ### Descripción hasta el siguiente ###
-    descripcion_match = re.search(r'### Descripción\s+(.*?)(?=\n###|\Z)',
-                                content, re.DOTALL)
+    descripcion_match = re.search(r'### Descripción\s+(.*?)(?=\n###|\Z)', content, re.DOTALL)
 
     return {
         "modulo": module_match.group(1).strip() if module_match else "<null>",
@@ -216,7 +214,7 @@ def generate_diagram_dot(all_dependencies, output_dir):
         written = set()  # para evitar escribir aristas duplicadas
 
         for module, deps in all_dependencies.items():
-            for dep in set(deps):  #  set() para evitar duplicados
+            for dep in set(deps):  # set() para evitar duplicados
                 line = f'    "{module}" -> "{dep}";\n'
                 if line not in written:
                     f.write(line)
