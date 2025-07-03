@@ -208,13 +208,13 @@ def build_content(modulo_path):
     md.append(f"{descripcion}\n")
     md.append("\n")
 
-    # Sección de cobertura para la documentacion del modulo de Terraform
+    # Sección de cobertura para la documentacion en el  módulo de Terraform
     md.append("## Cobertura de documentación\n")
     var_cov = (cobertura["doc_vars"] / cobertura["total_vars"] * 100) if cobertura["total_vars"] else 100
     out_cov = (cobertura["doc_outputs"] / cobertura["total_outputs"] * 100) if cobertura["total_outputs"] else 100
     md.append(f"- Variables documentadas: {cobertura['doc_vars']} de {cobertura['total_vars']} ({var_cov:.0f}%)\n")
-    md.append(f"- Outputs documentados: {cobertura['doc_outputs']} de {cobertura['total_outputs']} ({out_cov:.0f}%)\n")
-    md.append(f"- ¿README con descripción? {'Sí' if cobertura['tiene_readme'] else 'No'}\n\n")
+    md.append(f"- outputs documentadas: {cobertura['doc_outputs']} de {cobertura['total_outputs']} ({out_cov:.0f}%)\n")
+    md.append(f"- tiene readme?{'si' if ['tiene_readme'] else 'no'}\n\n")
     if variables:
         md.append("### Tabla de variables:\n")
         md.append("| Nombre | Tipo | Descripcion | Default |\n")
