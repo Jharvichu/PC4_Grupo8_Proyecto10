@@ -1,12 +1,13 @@
 import os          # Para manejo de rutas y archivos
 import re          # Para expresiones regulares(regex)
 import subprocess  # Para que llame a 'dot' de Graphviz y generar PNG de grafo
+import argparse
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "../infra/modules") #ruta de modulos de Terraform
 DOCS_DIR = os.path.join(os.path.dirname(__file__), "../docs")  # ruta donde se generaran los markdown y diagramas 
 
-# Extraccion de metadatos #
 
+# Extraccion de metadatos #
 def parse_readme_md(module_path):
     """
     Extrae el nombre del módulo y su descripción desde README.md si existe.
@@ -33,6 +34,7 @@ def parse_readme_md(module_path):
         "modulo": module_match.group(1).strip() if module_match else "<null>",
         "descripcion": descripcion_match.group(1).strip() if descripcion_match else "<null>"
     }
+
 
 def parse_variables_tf(module_path):
     """
@@ -69,6 +71,7 @@ def parse_variables_tf(module_path):
 
     return variables
 
+
 def parse_outputs_tf(module_path):
     """
     Extrae outputs de outputs.tf: nombre, descripción, valor; devuelve una lista de diccionarios por output.
@@ -99,6 +102,7 @@ def parse_outputs_tf(module_path):
 
     return outputs
 
+
 def parse_main_tf(module_path):
     """
     Extrae los recursos creados en main.tf tipo de recurso (aws_s3_bucket, etc.) y  nombre del recurso
@@ -124,9 +128,9 @@ def parse_main_tf(module_path):
 
     return resources
 
-# Generación de archivo markdown
 
-def generate_markdown(module_name, metadata, variables, outputs, resources):
+# Generación de archivo markdown
+def generate_markdown(module_name, metadata, variables, outputs, resources, output_dir):
     """
     Genera un archivo Markdown en docs/ con la documentación del módulo:
         * nombre y descripción
@@ -159,11 +163,13 @@ def generate_markdown(module_name, metadata, variables, outputs, resources):
             md.append(f"- {res['type']} {res['name']}\n")
 
     # Guardar archivo Markdown con nombre del módulo
-    with open(os.path.join(DOCS_DIR, f"{module_name}.md"), 'w', encoding='utf-8') as f:
+    if not os.path.exists(f"{DOCS_DIR}/{output_dir}"):
+        os.makedirs(f"{DOCS_DIR}/{output_dir}")
+    with open(os.path.join(f"{DOCS_DIR}/{output_dir}", f"{module_name}.md"), 'w', encoding='utf-8') as f:
         f.writelines(md)
 
-# Generación del diagrama DOT
 
+# Generación del diagrama DOT
 def extract_dependencies(module_path):
     """
     Extrae dependencias de main.tf como módulos utilizados, depends_on, referencias a variables y data
@@ -196,13 +202,14 @@ def extract_dependencies(module_path):
 
     return dependencies
 
-def generate_diagram_dot(all_dependencies):
+
+def generate_diagram_dot(all_dependencies, output_dir):
     """
     Genera un archivo dependencies.dot y una imagen PNG (grafo de dependencias entre módulos).
     Usa Graphviz (dot) para convertir el .dot en .png automáticamente.
     """
-    dot_path = os.path.join(DOCS_DIR, "dependencies.dot")
-    png_path = os.path.join(DOCS_DIR, "dependencies.png")
+    dot_path = os.path.join(f"{DOCS_DIR}/{output_dir}", "dependencies.dot")
+    png_path = os.path.join(f"{DOCS_DIR}/{output_dir}", "dependencies.png")
 
     with open(dot_path, 'w', encoding='utf-8') as f:
         f.write('digraph Dependencies {\n')
@@ -223,10 +230,15 @@ def generate_diagram_dot(all_dependencies):
     except FileNotFoundError:
         print(" Graphviz no instalado o 'dot' no está en PATH. Instálalo para generar el PNG.")
 
-# Funcion main
 
+# Funcion main
 def main():
     
+    parser = argparse.ArgumentParser(description="Generador de documentacion de IaC")
+    parser.add_argument('--output', type=str, default='../docs/lastet')
+    args = parser.parse_args()
+    version = args.output
+
     if not os.path.exists(DOCS_DIR):
         os.makedirs(DOCS_DIR)
 
@@ -250,17 +262,16 @@ def main():
         dependencies = extract_dependencies(module_path)
 
         # Generar archivo Markdown con documentación de cada módulo
-        generate_markdown(module, metadata, variables, outputs, resources)
+        generate_markdown(module, metadata, variables, outputs, resources, version)
 
         # Guardar dependencias para grafo final
         all_dependencies[module] = dependencies
 
     # Generar grafo de dependencias global entre los módulos
-    generate_diagram_dot(all_dependencies)
+    generate_diagram_dot(all_dependencies, version)
 
-    print("\n Documentación y diagrama generados en docs/.")
+    print(f"\n Documentación y diagrama generados en {version}.")
 
 
 if __name__ == "__main__":
     main()
-
