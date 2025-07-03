@@ -277,5 +277,3 @@ def write_md():
 
 if __name__ == "__main__":
     write_md()
-
-
