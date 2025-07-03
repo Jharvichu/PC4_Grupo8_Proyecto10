@@ -9,6 +9,17 @@ on:
       - develop
 
 jobs:
+  ai-artifact-scan:
+    name: "Escáner anti IA"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Buscar palabras de IA prohibidos
+        run: |
+          grep -RIE --exclude-dir=.git --exclude-dir=.github \
+            -e "chatgpt" -e "bard" -e "as an ai" \
+            -e "🧩" -e "🧠" -e "✅" -e "🧪" . && exit 1 || exit 0
+
   duplicity-jscpd:
     name: "Duplicidad con jscpd"
     runs-on: ubuntu-latest
@@ -25,16 +36,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Buscar comentarios en español
         run: |
           # Buscar archivos modificados en el PR
-          files=$(git diff --name-only origin/develop...${{ github.event.pull_request.head.sha }})
+          git fetch origin develop:develop
+          files=$(git diff --name-only develop...${{ github.sha }})
           fail=0
           for f in $files; do
             case "$f" in
               *.py|*.sh|*.tf|*.yml)
                 # Busca algún comentario en español (palabras comunes)
-                if ! grep -E -q "#.*(el|la|en|este|función|parámetro|devuelve|devuelve|configura|script|modifica|comentario)" "$f"; then
+                if ! grep -E -q "#.*(el|la|en|este|función|parámetro|devuelve|configura|script|modifica|comentario)" "$f"; then
                   echo "Falta comentario en español en $f"
                   fail=1
                 fi
@@ -61,6 +75,28 @@ jobs:
           python scripts/doc_extractor.py
       - name: Ejecutar tests unitarios (pytest)
         run: pytest --maxfail=1 --disable-warnings
+
+  live-diagrams:
+    name: "Live diagrams, graphiz"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalando Graphviz y dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphiz
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Generar diagramas (dot y png)
+        run: |
+          python scripts/diagram_generator.py
+      - name: Subir diagramas como artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-diagrams
+          path: |
+            docs/dependencies.dot
+            docs/dependencies.png
 
   lint:
     name: "Linters: flake8, tflint"
