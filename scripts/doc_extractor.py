@@ -217,6 +217,7 @@ def build_content(modulo_path):
     md.append(f"- ¿README con descripción? {'Sí' if cobertura['tiene_readme'] else 'No'}\n\n")
     if variables:
         md.append("### Tabla de variables:\n")
+        md.append("| Nombre | Tipo | Descripcion | Default |\n")
         md.append("|--------|------|-------------|---------|\n")
         for var in variables:
             default = var.get("default", "") if var.get("default") is not None else ""
@@ -276,3 +277,5 @@ def write_md():
 
 if __name__ == "__main__":
     write_md()
+
+
